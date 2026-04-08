@@ -1,8 +1,8 @@
 # EventGEn
 
-Base di partenza per costruire un'app desktop completa che generi aree, scopra fonti compatibili e analizzi eventi pubblici da fonti web e social.
+Base di partenza per costruire un'app desktop completa che generi aree, generi file fonti compatibili e analizzi eventi pubblici da fonti web e social.
 
-[Quickstart](docs/QUICKSTART.md) | [Configurazione](docs/CONFIGURATION.md) | [Formato sources.yaml](docs/SOURCES_FORMAT.md)
+[Repository GitHub](https://github.com/BrianCortinovis/EventGEn) | [Quickstart](docs/QUICKSTART.md) | [Configurazione](docs/CONFIGURATION.md) | [Formato sources.yaml](docs/SOURCES_FORMAT.md) | [Motore aree](docs/ENGINE.md)
 
 ## Obiettivo
 
@@ -10,21 +10,23 @@ Questo repository nasce come evoluzione del motore locale già costruito: da qui
 
 ## Stato attuale
 
-Al momento il repository contiene ancora il motore locale lineare:
+Al momento il repository contiene:
 
-- `run.py` per eseguire la pipeline;
+- `run.py` con subcomandi per aree, generazione config e analisi;
+- catalogo aree locale in `catalog/areas/`;
 - configurazione via `project.yaml` e `sources.yaml`;
 - parsing, analisi, deduplica e rendering HTML;
-- supporto a provider IA opzionali con fallback euristico.
+- supporto a provider IA opzionali con fallback euristico;
+- una skill Codex nativa in `skills/eventgen-native/`.
 
 ## Direzione del progetto
 
 I prossimi blocchi di sviluppo previsti qui dentro sono:
 
-1. motore di selezione area o territorio;
-2. generatore di `sources.yaml` compatibile;
-3. integrazione tra generatore fonti e source analyzer;
-4. successiva UX desktop con avvio da icona.
+1. migliorare il motore di selezione area o territorio;
+2. arricchire il generatore di `sources.yaml` compatibile;
+3. integrare discovery automatica da mappa, comune, provincia o raggio;
+4. aggiungere la UX desktop con avvio da icona.
 
 ## Cosa fa
 
@@ -54,16 +56,42 @@ output/
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python3 run.py
+python3 run.py list-areas
+python3 run.py generate-config --query "Val Seriana"
+python3 run.py analyze --project generated/val-seriana/project.yaml --sources generated/val-seriana/sources.yaml --candidates generated/val-seriana/sources_candidates.yaml --max-sources 4
 ```
 
 Con provider IA opzionale:
 
 ```bash
-python3 run.py --provider=openai
-python3 run.py --provider=claude
-python3 run.py --provider=gemini
+python3 run.py bootstrap --query "Val Seriana" --provider=openai --max-sources 4
+python3 run.py bootstrap --query "Val Seriana" --provider=claude --max-sources 4
+python3 run.py bootstrap --query "Val Seriana" --provider=gemini --max-sources 4
 ```
+
+## Versione Codex nativa
+
+Nel repository è inclusa anche una skill per Codex:
+
+- `skills/eventgen-native/`
+
+Quando installata in Codex, si usa come:
+
+```text
+Usa $eventgen-native per generare la configurazione di Val Seriana e lanciare il bootstrap.
+```
+
+## Motore iniziale
+
+Comandi gia disponibili:
+
+- `python3 run.py list-areas`
+- `python3 run.py resolve-area --query "Val Seriana"`
+- `python3 run.py generate-config --query "Val Seriana"`
+- `python3 run.py bootstrap --query "Val Seriana" --max-sources 4`
+- `python3 run.py analyze ...`
+
+Il caso `Val Seriana` e incluso come area reale di test nel catalogo locale.
 
 ## Configurazione
 

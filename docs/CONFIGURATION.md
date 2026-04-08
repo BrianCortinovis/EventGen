@@ -13,6 +13,25 @@ Definisce il dominio del progetto:
 - comuni noti;
 - output HTML.
 
+## `catalog/areas/*.yaml`
+
+Definisce una zona riutilizzabile per il motore EventGEn.
+
+Campi principali:
+
+- `slug`
+- `name`
+- `aliases`
+- `area_type`
+- `region`
+- `province`
+- `country`
+- `center`
+- `radius_km`
+- `municipalities`
+- `search_labels`
+- `source_seeds`
+
 ## `sources.yaml`
 
 Contiene le fonti attive e deve seguire il formato compatibile descritto in [SOURCES_FORMAT.md](SOURCES_FORMAT.md).
@@ -57,7 +76,7 @@ Il progetto non deve attivarle automaticamente.
 
 Per adattarlo a un territorio o a un tema:
 
-1. duplica `sources.yaml`;
-2. compila le sorgenti nel formato compatibile;
-3. aggiorna `known_municipalities` e `theme` in `project.yaml`;
-4. esegui di nuovo `python3 run.py`.
+1. aggiungi o modifica un file in `catalog/areas/`;
+2. genera la configurazione con `python3 run.py generate-config --query "<area>"`;
+3. controlla il `sources.yaml` generato;
+4. lancia l'analisi con `python3 run.py analyze ...`.

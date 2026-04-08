@@ -4,6 +4,8 @@ import json
 import sys
 from pathlib import Path
 
+import yaml
+
 from event_pipeline.analysis import Analyzer
 from event_pipeline.config import (
     load_project_config,
@@ -15,28 +17,72 @@ from event_pipeline.fetch import Fetcher
 from event_pipeline.parsing import discover_candidate_sources, extract_candidate_events
 from event_pipeline.providers import create_provider
 from event_pipeline.render_html import render_events_html
+from eventgen_engine.catalog import load_area_catalog, resolve_area
+from eventgen_engine.generator import create_generated_configs
+
+
+REPO_ROOT = Path(__file__).resolve().parent
+AREA_CATALOG_DIR = REPO_ROOT / "catalog" / "areas"
+DEFAULT_GENERATED_ROOT = REPO_ROOT / "generated"
 
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        description="Pipeline manuale per raccogliere e strutturare eventi da fonti web e social."
+        description="EventGEn: motore locale per generare fonti compatibili e analizzare eventi pubblici."
     )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    analyze_parser = subparsers.add_parser("analyze", help="Esegue la pipeline di analisi eventi.")
+    _add_analyze_arguments(analyze_parser)
+
+    list_parser = subparsers.add_parser("list-areas", help="Mostra le aree catalogate nel motore.")
+    list_parser.add_argument(
+        "--catalog",
+        default=str(AREA_CATALOG_DIR),
+        help="Cartella contenente il catalogo aree.",
+    )
+
+    resolve_parser = subparsers.add_parser("resolve-area", help="Risolve una query area e stampa o salva la definizione.")
+    resolve_parser.add_argument("--query", required=True, help="Nome area, alias o zona.")
+    resolve_parser.add_argument("--catalog", default=str(AREA_CATALOG_DIR), help="Cartella catalogo aree.")
+    resolve_parser.add_argument("--output", default="", help="Salva l'area risolta in un file YAML.")
+
+    generate_parser = subparsers.add_parser(
+        "generate-config",
+        help="Genera area.yaml, project.yaml, sources.yaml e sources_candidates.yaml da un'area.",
+    )
+    _add_generation_arguments(generate_parser)
+
+    bootstrap_parser = subparsers.add_parser(
+        "bootstrap",
+        help="Genera la configurazione per un'area e lancia subito la pipeline di analisi.",
+    )
+    _add_generation_arguments(bootstrap_parser)
+    bootstrap_parser.add_argument(
+        "--provider",
+        default="none",
+        choices=["none", "openai", "claude", "gemini"],
+        help="Provider IA opzionale.",
+    )
+    bootstrap_parser.add_argument(
+        "--max-sources",
+        type=int,
+        default=6,
+        help="Numero massimo di fonti da processare nel bootstrap di test.",
+    )
+
+    return parser
+
+
+def _add_analyze_arguments(parser):
     parser.add_argument(
         "--provider",
         default="none",
         choices=["none", "openai", "claude", "gemini"],
         help="Provider IA opzionale per analisi e classificazione.",
     )
-    parser.add_argument(
-        "--project",
-        default="project.yaml",
-        help="Percorso del file project.yaml",
-    )
-    parser.add_argument(
-        "--sources",
-        default="sources.yaml",
-        help="Percorso del file sources.yaml",
-    )
+    parser.add_argument("--project", default="project.yaml", help="Percorso del file project.yaml")
+    parser.add_argument("--sources", default="sources.yaml", help="Percorso del file sources.yaml")
     parser.add_argument(
         "--candidates",
         default="sources_candidates.yaml",
@@ -48,15 +94,126 @@ def build_parser():
         default=None,
         help="Limita il numero di fonti processate per esecuzioni rapide.",
     )
-    return parser
+
+
+def _add_generation_arguments(parser):
+    parser.add_argument("--query", required=True, help="Nome area o alias da risolvere nel catalogo.")
+    parser.add_argument("--catalog", default=str(AREA_CATALOG_DIR), help="Cartella catalogo aree.")
+    parser.add_argument(
+        "--project-template",
+        default="project.yaml",
+        help="Template project.yaml usato per generare la configurazione area-specifica.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default="generated",
+        help="Cartella radice dove creare la configurazione generata.",
+    )
 
 
 def main():
-    args = build_parser().parse_args()
-    root = Path(__file__).resolve().parent
+    parser = build_parser()
+    argv = _normalize_argv(sys.argv[1:])
+    args = parser.parse_args(argv)
 
-    project = load_project_config(root / args.project)
-    sources = load_sources(root / args.sources)
+    if args.command == "list-areas":
+        return handle_list_areas(args)
+    if args.command == "resolve-area":
+        return handle_resolve_area(args)
+    if args.command == "generate-config":
+        return handle_generate_config(args)
+    if args.command == "bootstrap":
+        return handle_bootstrap(args)
+    if args.command == "analyze":
+        return handle_analyze(args)
+    return 1
+
+
+def _normalize_argv(argv):
+    known = {"analyze", "list-areas", "resolve-area", "generate-config", "bootstrap"}
+    if not argv or argv[0].startswith("-") or argv[0] not in known:
+        return ["analyze", *argv]
+    return argv
+
+
+def handle_list_areas(args):
+    areas = load_area_catalog(_resolve_path(args.catalog))
+    for area in areas:
+        print(f"{area.slug}\t{area.name}\t{area.region}\t{len(area.source_seeds)} fonti seed")
+    return 0
+
+
+def handle_resolve_area(args):
+    match = resolve_area(args.query, _resolve_path(args.catalog))
+    payload = {
+        "slug": match.area.slug,
+        "name": match.area.name,
+        "matched_on": match.matched_on,
+        "score": match.score,
+        "region": match.area.region,
+        "province": match.area.province,
+        "country": match.area.country,
+        "radius_km": match.area.radius_km,
+        "municipalities": match.area.municipalities,
+        "source_seed_count": len(match.area.source_seeds),
+    }
+    if args.output:
+        output_path = _resolve_path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        print(f"[done] area salvata: {output_path}")
+    else:
+        print(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False).strip())
+    return 0
+
+
+def handle_generate_config(args):
+    paths = generate_area_configuration(args)
+    print(f"[done] area: {paths.area_path}")
+    print(f"[done] project: {paths.project_path}")
+    print(f"[done] sources: {paths.sources_path}")
+    print(f"[done] candidates: {paths.candidates_path}")
+    return 0
+
+
+def handle_bootstrap(args):
+    paths = generate_area_configuration(args)
+    print(f"[info] configurazione generata in: {paths.output_dir}")
+    analyze_args = argparse.Namespace(
+        command="analyze",
+        provider=args.provider,
+        project=paths.project_path,
+        sources=paths.sources_path,
+        candidates=paths.candidates_path,
+        max_sources=args.max_sources,
+    )
+    return handle_analyze(analyze_args)
+
+
+def generate_area_configuration(args):
+    catalog_path = _resolve_path(args.catalog)
+    match = resolve_area(args.query, catalog_path)
+    template_path = _resolve_path(args.project_template)
+    with template_path.open("r", encoding="utf-8") as handle:
+        template_project = yaml.safe_load(handle) or {}
+
+    generated_root = _resolve_path(args.output_dir)
+    if generated_root == REPO_ROOT / "generated":
+        output_dir = generated_root / match.area.slug
+    else:
+        output_dir = generated_root
+
+    paths = create_generated_configs(match.area, template_project, output_dir)
+    return paths
+
+
+def handle_analyze(args):
+    project_path = _resolve_path(args.project)
+    sources_path = _resolve_path(args.sources)
+    candidates_path = _resolve_path(args.candidates)
+
+    project = load_project_config(project_path)
+    sources = load_sources(sources_path)
     if args.max_sources is not None:
         sources = sources[: args.max_sources]
 
@@ -96,11 +253,12 @@ def main():
                 raw_events.append(event)
 
     deduped_events = deduplicate_events(raw_events)
-    output_html = root / project.output_html
+    working_dir = project_path.parent
+    output_html = working_dir / project.output_html
     output_html.parent.mkdir(parents=True, exist_ok=True)
     html = render_events_html(project, deduped_events)
     output_html.write_text(html, encoding="utf-8")
-    root_events_html = root / "events.html"
+    root_events_html = working_dir / "events.html"
     root_events_html.write_text(html, encoding="utf-8")
 
     output_json = output_html.with_suffix(".json")
@@ -109,7 +267,7 @@ def main():
         encoding="utf-8",
     )
 
-    merge_and_save_candidate_sources(root / args.candidates, discovered_sources)
+    merge_and_save_candidate_sources(candidates_path, discovered_sources)
 
     print(f"[done] eventi estratti: {len(raw_events)}")
     print(f"[done] eventi deduplicati: {len(deduped_events)}")
@@ -118,8 +276,14 @@ def main():
     print(f"[done] output JSON: {output_json}")
     if fetch_failures:
         print(f"[warn] fetch falliti: {len(fetch_failures)}")
-
     return 0
+
+
+def _resolve_path(raw_path: str) -> Path:
+    path = Path(raw_path)
+    if path.is_absolute():
+        return path
+    return REPO_ROOT / path
 
 
 if __name__ == "__main__":

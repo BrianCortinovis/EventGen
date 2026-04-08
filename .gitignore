@@ -11,3 +11,4 @@ venv/
 output/*.json
 output/*.html
 events.html
+generated/
