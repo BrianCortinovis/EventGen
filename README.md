@@ -1,4 +1,4 @@
-# EventGEn
+# EventGen
 
 Base di partenza per costruire un'app desktop completa che generi aree, generi file fonti compatibili e analizzi eventi pubblici da fonti web e social.
 
@@ -17,7 +17,7 @@ Al momento il repository contiene:
 - configurazione via `project.yaml` e `sources.yaml`;
 - parsing, analisi, deduplica e rendering HTML;
 - supporto a provider IA opzionali con fallback euristico;
-- una skill Codex nativa in `skills/eventgen-native/`.
+- una skill Codex nativa in `skills/eventgencodex/`.
 
 ## Direzione del progetto
 
@@ -74,12 +74,12 @@ python3 run.py bootstrap --query "Val Seriana" --provider=gemini --max-sources 4
 
 Nel repository è inclusa anche una skill per Codex:
 
-- `skills/eventgen-native/`
+- `skills/eventgencodex/`
 
 Quando installata in Codex, si usa come:
 
 ```text
-Usa $eventgen-native per generare la configurazione di Val Seriana e lanciare il bootstrap.
+Usa $EventGenCodex per generare la configurazione di Val Seriana e lanciare il bootstrap.
 ```
 
 ## Motore iniziale

@@ -1,19 +1,19 @@
 ---
-name: eventgen-native
-description: Use EventGEn as a native Codex workflow to resolve an area, generate compatible project and sources files, and run the local event analysis pipeline. Trigger this skill when the user wants to work on EventGEn, generate configs for a territory like Val Seriana, expand the area catalog, or run the terminal engine from inside Codex.
+name: EventGenCodex
+description: Use EventGen as a native Codex workflow to resolve an area, generate compatible project and sources files, and run the local event analysis pipeline. Trigger this skill when the user wants to work on EventGen, generate configs for a territory like Val Seriana, expand the area catalog, or run the terminal engine from inside Codex.
 metadata:
-  short-description: Native workflow for EventGEn
+  short-description: Native workflow for EventGen
 ---
 
-# EventGEn Native
+# EventGenCodex
 
-Use this skill when working with the repository-local EventGEn engine.
+Use this skill when working with the repository-local EventGen engine.
 
 Prefer this skill for:
 
 - generating `project.yaml` and `sources.yaml` from a named area;
 - extending `catalog/areas/*.yaml`;
-- running the EventGEn terminal engine from Codex;
+- running the EventGen terminal engine from Codex;
 - testing real territories such as `Val Seriana`;
 - iterating on the future desktop-app motor before the UX exists.
 
@@ -61,7 +61,7 @@ python3 run.py analyze --project generated/val-seriana/project.yaml --sources ge
 
 ## Working rules
 
-- Keep EventGEn separate from the earlier analyzer repo.
+- Keep EventGen separate from the earlier analyzer repo.
 - Treat the terminal engine as the source of truth for now.
 - Do not hardcode a single territory in the core engine.
 - Use real seed sources when adding a new area.

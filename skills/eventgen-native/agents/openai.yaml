@@ -1,4 +1,0 @@
-interface:
-  display_name: "EventGEn Native"
-  short_description: "Native Codex workflow for EventGEn"
-  default_prompt: "Use $eventgen-native to resolve an area, generate compatible config files, and run the EventGEn pipeline."

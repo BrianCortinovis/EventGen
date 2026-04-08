@@ -1,4 +1,4 @@
-# EventGEn Commands and Area Files
+# EventGen Commands and Area Files
 
 ## Area catalog files
 
@@ -39,4 +39,4 @@ Use:
 python3 run.py bootstrap --query "Val Seriana" --max-sources 4
 ```
 
-This is the quickest end-to-end validation of the current EventGEn motor.
+This is the quickest end-to-end validation of the current EventGen motor.
