@@ -30,6 +30,10 @@ def export_portal_payload(project, events, output_dir: Path):
                     "seo_description": record["seo"]["description"],
                     "keywords": record["seo"]["keywords"],
                     "canonical_path": record["seo"]["canonical_path"],
+                    "robots": record["seo"]["robots"],
+                    "primary_keyword": record["seo"]["primary_keyword"],
+                    "open_graph": record["seo"]["open_graph"],
+                    "twitter": record["seo"]["twitter"],
                 }
                 for record in records
             ],
@@ -48,6 +52,7 @@ def export_portal_payload(project, events, output_dir: Path):
                     "municipality": record["event"]["municipality"],
                     "category": record["event"]["category"],
                     "tags": record["event"]["tags"],
+                    "analytics_labels": record["analytics"]["labels"],
                     "text": record["search"]["document"],
                 },
                 ensure_ascii=False,
@@ -87,6 +92,7 @@ def build_portal_record(project, event):
     slug = slugify(f"{event.title}-{event.start_date}-{event.municipality}") or event.id
     seo_keywords = _build_keywords(project, event)
     location_label = _build_location_label(event)
+    primary_keyword = _pick_primary_keyword(event, project, seo_keywords)
     media_assets = []
 
     if event.image_url:
@@ -132,12 +138,70 @@ def build_portal_record(project, event):
             "title": _build_seo_title(event),
             "description": _build_seo_description(event),
             "keywords": seo_keywords,
+            "primary_keyword": primary_keyword,
             "canonical_path": f"/eventi/{slug}",
             "og_image": event.image_url,
+            "robots": "index,follow",
+            "open_graph": {
+                "type": "article",
+                "title": _build_seo_title(event),
+                "description": _build_seo_description(event),
+                "url": f"/eventi/{slug}",
+                "image": event.image_url,
+                "site_name": project.name,
+                "locale": project.language,
+            },
+            "twitter": {
+                "card": "summary_large_image" if event.image_url else "summary",
+                "title": _build_seo_title(event),
+                "description": _build_seo_description(event),
+                "image": event.image_url,
+            },
         },
         "search": {
             "document": _build_search_document(project, event),
             "boost": _build_search_boost(event),
+        },
+        "analytics": {
+            "content_group": "events",
+            "content_type": "event",
+            "labels": _build_analytics_labels(project, event, slug),
+            "dimensions": {
+                "event_id": event.id,
+                "event_slug": slug,
+                "event_title": event.title,
+                "event_category": event.category,
+                "event_subcategory": event.subcategory,
+                "event_municipality": event.municipality,
+                "event_source": event.source,
+                "event_reliability": event.reliability,
+                "event_confirmation_status": event.confirmation_status,
+                "event_start_date": event.start_date,
+                "event_end_date": event.end_date,
+                "has_image": bool(event.image_url),
+                "has_gallery": bool(event.gallery_images),
+                "has_flyer": bool(event.flyer_urls),
+                "has_youtube": bool(event.youtube_urls),
+                "area_label": project.area_label,
+                "theme": project.theme,
+            },
+            "ga4_recommended_events": {
+                "select_item": {
+                    "item_id": event.id,
+                    "item_name": event.title,
+                    "item_category": event.category,
+                    "item_category2": event.subcategory,
+                    "item_variant": event.municipality,
+                    "item_list_name": project.area_label,
+                },
+                "view_item": {
+                    "item_id": event.id,
+                    "item_name": event.title,
+                    "item_category": event.category,
+                    "item_category2": event.subcategory,
+                    "item_variant": event.municipality,
+                },
+            },
         },
         "schema_org": {
             "@context": "https://schema.org",
@@ -205,6 +269,20 @@ def _build_keywords(project, event):
     return result
 
 
+def _pick_primary_keyword(event, project, keywords):
+    for candidate in (
+        event.title,
+        event.category,
+        event.municipality,
+        project.area_label,
+        keywords[0] if keywords else "",
+    ):
+        clean = " ".join((candidate or "").split()).strip()
+        if clean:
+            return clean
+    return ""
+
+
 def _build_seo_title(event):
     chunks = [event.title]
     if event.municipality:
@@ -254,6 +332,19 @@ def _build_search_boost(event):
     if event.full_description:
         score += 0.15
     return round(score, 2)
+
+
+def _build_analytics_labels(project, event, slug):
+    return {
+        "area": project.area_label,
+        "theme": project.theme,
+        "category": event.category,
+        "subcategory": event.subcategory,
+        "municipality": event.municipality,
+        "source": event.source,
+        "reliability": event.reliability,
+        "slug": slug,
+    }
 
 
 def _build_body_markdown(event):

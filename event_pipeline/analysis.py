@@ -62,6 +62,11 @@ NON_EVENT_TITLE_PATTERNS = (
     "accessibility statement",
     "dichiarazione di accessibilita",
     "dichiarazione di accessibilità",
+    "previsione del",
+    "codice colore",
+    "vedi maggiori informazioni",
+    "allerta meteo",
+    "bollettino meteo",
     "privacy policy",
     "cookie policy",
     "albo pretorio",
@@ -79,6 +84,8 @@ NON_EVENT_URL_PATTERNS = (
     "uffici",
     "servizi",
     "/page/",
+    "meteo",
+    "allerta",
 )
 
 
@@ -103,6 +110,8 @@ class Analyzer:
 
         start_date, end_date = self._resolve_dates(candidate, ai_data)
         if not start_date:
+            return None
+        if not self._is_active_event(start_date, end_date):
             return None
 
         if not self._looks_like_public_event(candidate, merged_text, ai_data):
@@ -163,6 +172,15 @@ class Analyzer:
 
         category, _ = self._classify_category(candidate, merged_text, ai_data)
         return bool(category)
+
+    def _is_active_event(self, start_date: str, end_date: str) -> bool:
+        active_from = self._parse_iso_date(self.project.active_from_date)
+        if not active_from:
+            return True
+        reference_end = self._parse_iso_date(end_date or start_date)
+        if not reference_end:
+            return True
+        return reference_end >= active_from
 
     def _contains_excluded_text(self, text: str) -> bool:
         lowered = text.lower()
@@ -294,6 +312,15 @@ class Analyzer:
             seen.add(clean)
             merged.append(clean)
         return merged
+
+    def _parse_iso_date(self, value: str):
+        clean = self._clean_text(value)
+        if not clean:
+            return None
+        try:
+            return datetime.strptime(clean, "%Y-%m-%d").date()
+        except ValueError:
+            return None
 
 
 def parse_date_range(text: str) -> Tuple[str, str]:

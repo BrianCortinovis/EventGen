@@ -1,22 +1,22 @@
 # EventGen
 
-Base di partenza per costruire un'app desktop completa che generi aree, generi file fonti compatibili e analizzi eventi pubblici da fonti web e social.
+Motore locale per generare configurazioni territoriali, analizzare eventi pubblici da fonti web e social discovery-only e produrre output pronti per un futuro sito o portale.
 
 [Repository GitHub](https://github.com/BrianCortinovis/EventGen) | [Quickstart](docs/QUICKSTART.md) | [Configurazione](docs/CONFIGURATION.md) | [Formato sources.yaml](docs/SOURCES_FORMAT.md) | [Motore aree](docs/ENGINE.md)
 
 ## Obiettivo
 
-Questo repository nasce come evoluzione del motore locale già costruito: da qui vogliamo arrivare a un'app desktop integrata che permetta di selezionare una zona, generare un file fonti compatibile, analizzare le fonti e produrre un output eventi usabile anche da utenti non tecnici.
+Questo repository contiene il core terminale di EventGen. Il progetto è pensato per restare generico e riutilizzabile: i territori reali e i file area usati in produzione restano locali e non vengono pubblicati nel repo.
 
 ## Stato attuale
 
 Al momento il repository contiene:
 
 - `run.py` con subcomandi per aree, generazione config e analisi;
-- catalogo aree locale in `catalog/areas/`;
+- cartella `catalog/areas/` pronta a ricevere file area locali non versionati;
 - configurazione via `project.yaml` e `sources.yaml`;
 - parsing, analisi, deduplica e rendering HTML;
-- supporto a provider IA opzionali con fallback euristico;
+- provider IA via CLI con euristiche usate solo come supporto;
 - una skill Codex nativa in `skills/eventgencodex/`.
 
 ## Direzione del progetto
@@ -26,7 +26,7 @@ I prossimi blocchi di sviluppo previsti qui dentro sono:
 1. migliorare il motore di selezione area o territorio;
 2. arricchire il generatore di `sources.yaml` compatibile;
 3. integrare discovery automatica da mappa, comune, provincia o raggio;
-4. aggiungere la UX desktop con avvio da icona.
+4. collegare questi output a un sito o portale eventi.
 
 ## Cosa fa
 
@@ -36,8 +36,9 @@ I prossimi blocchi di sviluppo previsti qui dentro sono:
 - può usare un browser headless per pagine dinamiche quando serve;
 - usa i social solo per discovery, mai come conferma forte;
 - deduplica eventi simili e assegna un livello di affidabilità;
+- importa solo eventi ancora attivi alla data di esecuzione;
 - arricchisce la scheda evento con testo esteso, foto, flyer e link YouTube;
-- genera `events.html`, `events.json` ed export portal-ready con SEO.
+- genera `events.html`, `events.json` ed export portal-ready con SEO, ricerca e tracking.
 
 ## Struttura
 
@@ -58,17 +59,19 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python3 run.py list-areas
-python3 run.py generate-config --query "Val Seriana"
-python3 run.py analyze --project generated/val-seriana/project.yaml --sources generated/val-seriana/sources.yaml --candidates generated/val-seriana/sources_candidates.yaml --max-sources 4
+python3 run.py generate-config --query "Nome Zona"
+python3 run.py analyze --project generated/nome-zona/project.yaml --sources generated/nome-zona/sources.yaml --candidates generated/nome-zona/sources_candidates.yaml --provider=claude
 ```
 
-Con provider IA opzionale:
+Bootstrap completo:
 
 ```bash
-python3 run.py bootstrap --query "Val Seriana" --provider=openai --max-sources 4
-python3 run.py bootstrap --query "Val Seriana" --provider=claude --max-sources 4
-python3 run.py bootstrap --query "Val Seriana" --provider=gemini --max-sources 4
+python3 run.py bootstrap --query "Nome Zona" --provider=openai
+python3 run.py bootstrap --query "Nome Zona" --provider=claude
+python3 run.py bootstrap --query "Nome Zona" --provider=gemini
 ```
+
+`--max-sources` esiste ancora, ma solo per test rapidi: il flusso normale deve processare tutte le fonti attive.
 
 ## Versione Codex nativa
 
@@ -79,7 +82,7 @@ Nel repository è inclusa anche una skill per Codex:
 Quando installata in Codex, si usa come:
 
 ```text
-Usa $EventGenCodex per generare la configurazione di Val Seriana e lanciare il bootstrap.
+Usa $EventGenCodex per generare la configurazione di una zona e lanciare il bootstrap.
 ```
 
 ## Motore iniziale
@@ -87,12 +90,12 @@ Usa $EventGenCodex per generare la configurazione di Val Seriana e lanciare il b
 Comandi gia disponibili:
 
 - `python3 run.py list-areas`
-- `python3 run.py resolve-area --query "Val Seriana"`
-- `python3 run.py generate-config --query "Val Seriana"`
-- `python3 run.py bootstrap --query "Val Seriana" --max-sources 4`
+- `python3 run.py resolve-area --query "Nome Zona"`
+- `python3 run.py generate-config --query "Nome Zona"`
+- `python3 run.py bootstrap --query "Nome Zona" --provider=claude`
 - `python3 run.py analyze ...`
 
-Il caso `Val Seriana` e incluso come area reale di test nel catalogo locale.
+Il catalogo repository resta vuoto di default. I file area reali possono stare in `catalog/areas/` sul tuo ambiente locale oppure in una cartella esterna passata via `--catalog`.
 
 ## Tipi di eventi coperti
 
@@ -102,7 +105,7 @@ Il motore e pensato per coprire praticamente tutto il perimetro eventi pubblici:
 - mostre, cinema, cultura, tradizioni;
 - concerti, live, spettacoli;
 - serate in bar, pub, enoteche e locali;
-- nightlife, dj set, clubbing, bowling, intrattenimento indoor;
+- nightlife, dj set, discoteche, bowling, karaoke e intrattenimento indoor;
 - parate, cerimonie, manifestazioni ufficiali;
 - eventi sportivi pubblici e outdoor.
 
@@ -121,6 +124,8 @@ Oltre all'HTML e al JSON standard, la pipeline produce anche:
 Questi file sono preparati per futuri aggiornamenti di siti o portali web, con campi utili per:
 
 - SEO editoriale;
+- Open Graph e Twitter cards;
+- import analytics e tracking GA4;
 - ricerca interna;
 - import verso CMS o portali eventi;
 - schede evento con testo, media, sorgenti e metadata.
@@ -131,7 +136,7 @@ Questi file sono preparati per futuri aggiornamenti di siti o portali web, con c
 - `sources.yaml`: fonti attive;
 - `sources_candidates.yaml`: fonti scoperte ma non validate.
 
-Il repository è ora completamente generico e non contiene riferimenti a territori specifici. Il file `sources.yaml` deve seguire il formato compatibile documentato in [docs/SOURCES_FORMAT.md](docs/SOURCES_FORMAT.md).
+Il repository è completamente generico e non contiene più territori pubblici di esempio. Il file `sources.yaml` deve seguire il formato compatibile documentato in [docs/SOURCES_FORMAT.md](docs/SOURCES_FORMAT.md).
 
 Nel setup locale dell'autore, il prompt usato per generare file fonti compatibili è mantenuto anche in:
 
@@ -147,19 +152,13 @@ Gli eventi trovati solo via social restano non confermati.
 
 ## Provider IA
 
-La pipeline funziona anche senza IA. Se il provider scelto non è disponibile, il sistema usa il fallback euristico.
+La pipeline richiede un provider IA via CLI:
 
-Variabili ambiente attese:
+- `openai` tramite Codex CLI
+- `claude` tramite Claude Code CLI
+- `gemini` tramite Gemini CLI, se installato
 
-- `OPENAI_API_KEY`
-- `ANTHROPIC_API_KEY`
-- `GEMINI_API_KEY`
-
-SDK opzionali:
-
-```bash
-pip install openai anthropic google-generativeai
-```
+Le euristiche locali restano attive per parsing, date, filtri e supporto al prompt, ma non sostituiscono il provider IA.
 
 ## Rendering browser opzionale
 

@@ -62,15 +62,15 @@ def build_parser():
     _add_generation_arguments(bootstrap_parser)
     bootstrap_parser.add_argument(
         "--provider",
-        default="none",
-        choices=["none", "openai", "claude", "gemini"],
-        help="Provider IA opzionale.",
+        required=True,
+        choices=["openai", "claude", "gemini"],
+        help="Provider IA via CLI da usare nel bootstrap.",
     )
     bootstrap_parser.add_argument(
         "--max-sources",
         type=int,
-        default=6,
-        help="Numero massimo di fonti da processare nel bootstrap di test.",
+        default=None,
+        help="Limita il numero di fonti processate solo per test rapidi.",
     )
 
     return parser
@@ -79,9 +79,9 @@ def build_parser():
 def _add_analyze_arguments(parser):
     parser.add_argument(
         "--provider",
-        default="none",
-        choices=["none", "openai", "claude", "gemini"],
-        help="Provider IA opzionale per analisi e classificazione.",
+        required=True,
+        choices=["openai", "claude", "gemini"],
+        help="Provider IA via CLI da usare per analisi e classificazione.",
     )
     parser.add_argument("--project", default="project.yaml", help="Percorso del file project.yaml")
     parser.add_argument("--sources", default="sources.yaml", help="Percorso del file sources.yaml")
@@ -220,6 +220,12 @@ def handle_analyze(args):
         sources = sources[: args.max_sources]
 
     provider = create_provider(args.provider)
+    if not provider.is_available():
+        print(f"[error] provider IA non disponibile: {provider.name}")
+        if provider.unavailable_reason:
+            print(f"[error] dettaglio: {provider.unavailable_reason}")
+        return 2
+
     fetcher = Fetcher(project)
     analyzer = Analyzer(project, provider)
 
@@ -229,11 +235,8 @@ def handle_analyze(args):
 
     print(f"[info] progetto: {project.name}")
     print(f"[info] fonti attive: {len(sources)}")
-    if provider.name != "none":
-        availability = "disponibile" if provider.is_available() else "non disponibile"
-        print(f"[info] provider IA: {provider.name} ({availability})")
-        if not provider.is_available() and provider.unavailable_reason:
-            print(f"[warn] fallback euristico: {provider.unavailable_reason}")
+    print(f"[info] eventi considerati attivi dal: {project.active_from_date}")
+    print(f"[info] provider IA: {provider.name} (disponibile)")
 
     for index, source in enumerate(sources, start=1):
         print(f"[info] [{index}/{len(sources)}] analisi fonte: {source.name} -> {source.url}")

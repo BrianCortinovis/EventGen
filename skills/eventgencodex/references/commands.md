@@ -36,7 +36,7 @@ Each area file in `catalog/areas/` should define:
 Use:
 
 ```bash
-python3 run.py bootstrap --query "Val Seriana" --max-sources 4
+python3 run.py bootstrap --query "Nome Zona" --provider=claude
 ```
 
-This is the quickest end-to-end validation of the current EventGen motor.
+This is the standard end-to-end validation of the current EventGen motor. Use `--max-sources` only for quick local tests, not for real production-oriented runs.

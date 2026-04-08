@@ -1,7 +1,13 @@
 import json
 import os
 import re
+import shutil
+import subprocess
+from pathlib import Path
 from typing import Optional
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 class BaseProvider:
@@ -21,117 +27,132 @@ class NullProvider(BaseProvider):
     name = "none"
 
 
-class OpenAIProvider(BaseProvider):
+class CLIProvider(BaseProvider):
+    command_name = ""
+
+    def __init__(self):
+        super().__init__()
+        self.command_path = ""
+
+    def is_available(self) -> bool:
+        if self.command_path:
+            return True
+        command_path = shutil.which(self.command_name)
+        if not command_path:
+            self.unavailable_reason = f"CLI non trovato: {self.command_name}"
+            return False
+        self.command_path = command_path
+        return True
+
+    def extract_event(self, candidate, project) -> Optional[dict]:
+        if not self.is_available():
+            return None
+
+        prompt = (
+            f"{_SYSTEM_PROMPT}\n\n"
+            "Restituisci solo JSON valido, senza spiegazioni e senza markdown.\n\n"
+            f"{_build_prompt(candidate, project)}"
+        )
+        command = self._build_command(prompt)
+
+        try:
+            result = subprocess.run(
+                command,
+                cwd=str(REPO_ROOT),
+                capture_output=True,
+                text=True,
+                timeout=180,
+            )
+        except Exception as exc:
+            self.unavailable_reason = str(exc)
+            return None
+
+        payload = self._parse_cli_output(result.stdout, result.stderr)
+        if payload is None and result.returncode != 0 and not self.unavailable_reason:
+            self.unavailable_reason = (result.stderr or result.stdout or "").strip()[:300]
+        return payload
+
+    def _build_command(self, prompt: str):
+        raise NotImplementedError
+
+    def _parse_cli_output(self, stdout: str, stderr: str) -> Optional[dict]:
+        return _safe_json_loads(stdout.strip())
+
+
+class OpenAIProvider(CLIProvider):
     name = "openai"
+    command_name = "codex"
 
     def __init__(self):
         super().__init__()
-        self.api_key = os.getenv("OPENAI_API_KEY", "")
-        self.model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-        self._client = None
+        self.model = os.getenv("OPENAI_CLI_MODEL", "gpt-5.4-mini")
 
-    def is_available(self) -> bool:
-        if not self.api_key:
-            self.unavailable_reason = "manca OPENAI_API_KEY"
-            return False
-        try:
-            from openai import OpenAI
-        except ImportError:
-            self.unavailable_reason = "pacchetto openai non installato"
-            return False
-        self._client = OpenAI(api_key=self.api_key)
-        return True
+    def _build_command(self, prompt: str):
+        return [
+            self.command_path,
+            "exec",
+            "--json",
+            "--sandbox",
+            "danger-full-access",
+            "--skip-git-repo-check",
+            "-m",
+            self.model,
+            "-C",
+            str(REPO_ROOT),
+            prompt,
+        ]
 
-    def extract_event(self, candidate, project) -> Optional[dict]:
-        if not self._client and not self.is_available():
-            return None
-        prompt = _build_prompt(candidate, project)
-        try:
-            response = self._client.chat.completions.create(
-                model=self.model,
-                response_format={"type": "json_object"},
-                messages=[
-                    {"role": "system", "content": _SYSTEM_PROMPT},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0,
-            )
-            content = response.choices[0].message.content or "{}"
-            return _safe_json_loads(content)
-        except Exception:
-            return None
+    def _parse_cli_output(self, stdout: str, stderr: str) -> Optional[dict]:
+        last_message = ""
+        for raw_line in stdout.splitlines():
+            line = raw_line.strip()
+            if not line.startswith("{"):
+                continue
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if item.get("type") == "item.completed":
+                content = item.get("item", {})
+                if content.get("type") == "agent_message":
+                    last_message = content.get("text", "") or ""
+        return _safe_json_loads(last_message)
 
 
-class ClaudeProvider(BaseProvider):
+class ClaudeProvider(CLIProvider):
     name = "claude"
+    command_name = "claude"
 
-    def __init__(self):
-        super().__init__()
-        self.api_key = os.getenv("ANTHROPIC_API_KEY", "")
-        self.model = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
-        self._client = None
+    def _build_command(self, prompt: str):
+        return [
+            self.command_path,
+            "-p",
+            "--output-format",
+            "json",
+            prompt,
+        ]
 
-    def is_available(self) -> bool:
-        if not self.api_key:
-            self.unavailable_reason = "manca ANTHROPIC_API_KEY"
-            return False
-        try:
-            from anthropic import Anthropic
-        except ImportError:
-            self.unavailable_reason = "pacchetto anthropic non installato"
-            return False
-        self._client = Anthropic(api_key=self.api_key)
-        return True
-
-    def extract_event(self, candidate, project) -> Optional[dict]:
-        if not self._client and not self.is_available():
+    def _parse_cli_output(self, stdout: str, stderr: str) -> Optional[dict]:
+        text = stdout.strip()
+        if not text:
             return None
-        prompt = _build_prompt(candidate, project)
         try:
-            response = self._client.messages.create(
-                model=self.model,
-                max_tokens=700,
-                temperature=0,
-                system=_SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            text_parts = [block.text for block in response.content if getattr(block, "type", "") == "text"]
-            return _safe_json_loads("\n".join(text_parts))
-        except Exception:
-            return None
+            payload = json.loads(text)
+        except json.JSONDecodeError:
+            return _safe_json_loads(text)
+        return _safe_json_loads(payload.get("result", ""))
 
 
-class GeminiProvider(BaseProvider):
+class GeminiProvider(CLIProvider):
     name = "gemini"
+    command_name = os.getenv("GEMINI_CLI_BIN", "gemini")
 
-    def __init__(self):
-        super().__init__()
-        self.api_key = os.getenv("GEMINI_API_KEY", "")
-        self.model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
-        self._model = None
-
-    def is_available(self) -> bool:
-        if not self.api_key:
-            self.unavailable_reason = "manca GEMINI_API_KEY"
-            return False
-        try:
-            import google.generativeai as genai
-        except ImportError:
-            self.unavailable_reason = "pacchetto google-generativeai non installato"
-            return False
-        genai.configure(api_key=self.api_key)
-        self._model = genai.GenerativeModel(self.model)
-        return True
-
-    def extract_event(self, candidate, project) -> Optional[dict]:
-        if not self._model and not self.is_available():
-            return None
-        prompt = f"{_SYSTEM_PROMPT}\n\n{_build_prompt(candidate, project)}"
-        try:
-            response = self._model.generate_content(prompt)
-            return _safe_json_loads(getattr(response, "text", "") or "{}")
-        except Exception:
-            return None
+    def _build_command(self, prompt: str):
+        return [
+            self.command_path,
+            "-p",
+            prompt,
+        ]
 
 
 def create_provider(name: str) -> BaseProvider:
@@ -146,10 +167,11 @@ def create_provider(name: str) -> BaseProvider:
 
 
 _SYSTEM_PROMPT = """
-Sei un estrattore di eventi. Restituisci solo JSON valido.
-Decidi se il contenuto descrive un evento pubblico con data reale.
+Sei un estrattore di eventi pubblici.
+Usa i segnali locali come supporto, ma restituisci una decisione finale tua in JSON.
+Restituisci solo JSON valido.
 Campi JSON attesi:
-is_event, title, short_description, start_date, end_date, time, municipality, venue, category, subcategory, organizer, image_url.
+is_event, title, short_description, full_description, start_date, end_date, time, municipality, venue, category, subcategory, organizer, image_url.
 Usa date ISO YYYY-MM-DD. Se un campo manca, restituisci stringa vuota.
 """.strip()
 
@@ -160,6 +182,7 @@ def _build_prompt(candidate, project) -> str:
             "theme": project.theme,
             "categories": project.categories,
             "known_municipalities": project.known_municipalities,
+            "active_from_date": project.active_from_date,
         },
         "source": {
             "name": candidate.source.name,
@@ -169,7 +192,8 @@ def _build_prompt(candidate, project) -> str:
         },
         "candidate": {
             "title": candidate.title,
-            "text": candidate.text[:4000],
+            "text": candidate.text[:5000],
+            "detail_text": (candidate.detail_text or "")[:8000],
             "raw_date": candidate.raw_date,
             "raw_end_date": candidate.raw_end_date,
             "raw_time": candidate.raw_time,
@@ -183,12 +207,18 @@ def _build_prompt(candidate, project) -> str:
 def _safe_json_loads(text: str) -> Optional[dict]:
     if not text:
         return None
+
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?", "", cleaned).strip()
+        cleaned = re.sub(r"```$", "", cleaned).strip()
+
     try:
-        return json.loads(text)
+        return json.loads(cleaned)
     except json.JSONDecodeError:
         pass
 
-    match = re.search(r"\{.*\}", text, flags=re.DOTALL)
+    match = re.search(r"\{.*\}", cleaned, flags=re.DOTALL)
     if not match:
         return None
 

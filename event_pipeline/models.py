@@ -16,6 +16,7 @@ class ProjectConfig:
     include_keywords: List[str]
     exclude_keywords: List[str]
     event_link_keywords: List[str]
+    active_from_date: str = ""
     browser_timeout_seconds: int = 18
     max_candidate_blocks_per_source: int = 40
 

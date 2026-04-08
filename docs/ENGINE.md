@@ -35,26 +35,26 @@ python3 run.py list-areas
 ### Risolvere una zona
 
 ```bash
-python3 run.py resolve-area --query "Val Seriana"
+python3 run.py resolve-area --query "Nome Zona"
 ```
 
 ### Generare la configurazione
 
 ```bash
-python3 run.py generate-config --query "Val Seriana"
+python3 run.py generate-config --query "Nome Zona"
 ```
 
 Output generato di default:
 
-- `generated/val-seriana/area.yaml`
-- `generated/val-seriana/project.yaml`
-- `generated/val-seriana/sources.yaml`
-- `generated/val-seriana/sources_candidates.yaml`
+- `generated/nome-zona/area.yaml`
+- `generated/nome-zona/project.yaml`
+- `generated/nome-zona/sources.yaml`
+- `generated/nome-zona/sources_candidates.yaml`
 
 ### Bootstrap completo
 
 ```bash
-python3 run.py bootstrap --query "Val Seriana" --max-sources 4
+python3 run.py bootstrap --query "Nome Zona" --provider=claude
 ```
 
 Questo comando:
@@ -63,10 +63,6 @@ Questo comando:
 2. genera la configurazione;
 3. lancia subito la pipeline di analisi.
 
-## Caso di test attuale
+## Note repository
 
-Il motore include una prima area reale:
-
-- `Val Seriana`
-
-Serve come test del flusso end-to-end e come modello per aggiungere nuove aree.
+Il repository pubblico non include aree reali versionate. I file area stanno di norma in `catalog/areas/` solo nel tuo ambiente locale oppure in una cartella esterna passata via `--catalog`.

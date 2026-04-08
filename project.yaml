@@ -7,6 +7,7 @@ timezone: Europe/Rome
 output_html: output/events.html
 area_label: Territorio configurabile
 theme: eventi pubblici
+active_from_date: ""
 
 known_municipalities: []
 

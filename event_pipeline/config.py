@@ -1,5 +1,7 @@
 from pathlib import Path
 from typing import Iterable, List
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -15,11 +17,15 @@ def _read_yaml(path: Path):
 
 def load_project_config(path: Path) -> ProjectConfig:
     data = _read_yaml(path)
+    timezone = data.get("timezone", "Europe/Rome")
+    active_from_date = data.get("active_from_date", "")
+    if not active_from_date:
+        active_from_date = datetime.now(ZoneInfo(timezone)).strftime("%Y-%m-%d")
     return ProjectConfig(
         name=data.get("name", "Event Source Analyzer"),
         description=data.get("description", ""),
         language=data.get("language", "it"),
-        timezone=data.get("timezone", "Europe/Rome"),
+        timezone=timezone,
         output_html=data.get("output_html", "output/events.html"),
         area_label=data.get("area_label", ""),
         theme=data.get("theme", "eventi"),
@@ -28,6 +34,7 @@ def load_project_config(path: Path) -> ProjectConfig:
         include_keywords=data.get("include_keywords", []) or [],
         exclude_keywords=data.get("exclude_keywords", []) or [],
         event_link_keywords=data.get("event_link_keywords", []) or [],
+        active_from_date=active_from_date,
         browser_timeout_seconds=int(data.get("browser_timeout_seconds", 18)),
         max_candidate_blocks_per_source=int(data.get("max_candidate_blocks_per_source", 40)),
     )
