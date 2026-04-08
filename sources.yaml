@@ -1,0 +1,19 @@
+version: 1
+project: generic-events
+region: ""
+country: IT
+notes: >
+  File fonti generico e compatibile con la pipeline. Compila questo file seguendo
+  la specifica documentata nel repository prima di eseguire una raccolta reale.
+defaults:
+  enabled: true
+  fetch_mode: auto
+  output_language: it
+  confidence_policy:
+    official: high
+    aggregator: medium
+    social: low
+  social_policy:
+    discovery_only: true
+    requires_confirmation: true
+sources: []

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EventGEn</title>
+  <meta name="description" content="Motore di base per una futura app desktop che genera fonti compatibili e analizza eventi pubblici.">
+  <style>
+    :root {
+      --paper: #f6f1e8;
+      --ink: #1f1a16;
+      --muted: #6f6358;
+      --line: rgba(31, 26, 22, 0.12);
+      --accent: #bf5a36;
+      --accent-2: #0f6c5c;
+      --panel: rgba(255, 252, 247, 0.84);
+      --shadow: 0 20px 70px rgba(36, 25, 16, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(191, 90, 54, 0.12), transparent 28rem),
+        radial-gradient(circle at 90% 20%, rgba(15, 108, 92, 0.12), transparent 24rem),
+        linear-gradient(180deg, #fbf7f1 0%, var(--paper) 100%);
+    }
+    .wrap {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+    .hero {
+      padding: 32px 0 20px;
+    }
+    .brand {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.65);
+      font-size: 0.88rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 18px 0 12px;
+      font-size: clamp(2.7rem, 8vw, 5.3rem);
+      line-height: 0.92;
+      max-width: 12ch;
+    }
+    .lead {
+      max-width: 50rem;
+      font-size: 1.18rem;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+    .actions {
+      margin-top: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 999px;
+      text-decoration: none;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      background: rgba(255,255,255,0.72);
+    }
+    .button.primary {
+      background: var(--accent);
+      color: white;
+      border-color: transparent;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+      margin: 34px 0 48px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      backdrop-filter: blur(10px);
+    }
+    .panel h2 {
+      margin-top: 0;
+      font-size: 1.5rem;
+    }
+    .panel p, .panel li {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .step {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: rgba(255,255,255,0.6);
+    }
+    .step strong {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 1.05rem;
+      color: var(--accent-2);
+    }
+    code, pre {
+      font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    }
+    pre {
+      margin: 0;
+      padding: 18px;
+      border-radius: 18px;
+      overflow: auto;
+      background: #1e1b18;
+      color: #f6f2ea;
+    }
+    .mini-list {
+      display: grid;
+      gap: 10px;
+      padding-left: 18px;
+    }
+    footer {
+      padding: 6px 0 44px;
+      color: var(--muted);
+    }
+    @media (max-width: 860px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .steps {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <span class="brand">Open source local pipeline</span>
+      <h1>EventGEn</h1>
+      <p class="lead">
+        EventGEn e una base di sviluppo per costruire un'app desktop completa: selezione area,
+        generazione fonti compatibili e analisi eventi in un flusso unico.
+      </p>
+      <div class="actions">
+        <a class="button primary" href="../README.md">Apri il progetto</a>
+        <a class="button" href="./QUICKSTART.md">Quickstart</a>
+        <a class="button" href="./SOURCES_FORMAT.md">Formato sources.yaml</a>
+        <a class="button" href="./CONFIGURATION.md">Configurazione</a>
+      </div>
+    </section>
+
+    <section class="steps">
+      <article class="step">
+        <strong>1. Configura</strong>
+        Definisci area, categorie e fonti in file YAML esterni.
+      </article>
+      <article class="step">
+        <strong>2. Esegui</strong>
+        Lancia la pipeline manualmente con <code>python3 run.py</code>.
+      </article>
+      <article class="step">
+        <strong>3. Pubblica</strong>
+        Ottieni un <code>events.html</code> statico pronto da aprire o condividere.
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>Cosa include</h2>
+        <ul class="mini-list">
+          <li>fetch di fonti HTML, WordPress e pagine dinamiche opzionali;</li>
+          <li>parsing euristico con supporto IA opzionale;</li>
+          <li>deduplica per titolo, data e comune;</li>
+          <li>affidabilità alta, media, bassa;</li>
+          <li>output HTML con filtri, ricerca e ordinamento.</li>
+        </ul>
+      </article>
+
+      <article class="panel">
+        <h2>Regole chiare</h2>
+        <ul class="mini-list">
+          <li>i social servono solo a scoprire eventi;</li>
+          <li>gli eventi senza data reale vengono esclusi;</li>
+          <li>news, editoriali e attività permanenti non entrano;</li>
+          <li>la logica non è hardcodata su un singolo territorio.</li>
+        </ul>
+      </article>
+
+      <article class="panel">
+        <h2>Uso minimo</h2>
+        <pre><code>python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python3 run.py</code></pre>
+      </article>
+
+      <article class="panel">
+        <h2>Per chi è utile</h2>
+        <p>
+          Comuni, proloco, reti territoriali, musei, redazioni locali, operatori turistici,
+          community manager e sviluppatori che vogliono un punto di partenza serio ma leggero.
+        </p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    Progetto pensato per essere riutilizzabile, documentato e pubblicabile anche tramite GitHub Pages.
+  </footer>
+</body>
+</html>

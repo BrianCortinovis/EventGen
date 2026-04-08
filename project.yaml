@@ -1,0 +1,71 @@
+name: EventGEn
+description: >
+  Motore di base per una futura app desktop che genera fonti compatibili e analizza
+  eventi pubblici da fonti web e social.
+language: it
+timezone: Europe/Rome
+output_html: output/events.html
+area_label: Territorio configurabile
+theme: eventi pubblici
+
+known_municipalities: []
+
+categories:
+  - Cultura
+  - Mostre
+  - Cinema
+  - Musica e spettacoli
+  - Famiglia
+  - Sagre e feste
+  - Mercatini
+  - Sport
+  - Outdoor
+  - Tradizioni
+
+include_keywords:
+  - evento
+  - eventi
+  - manifestazione
+  - manifestazioni
+  - sagra
+  - festa
+  - mostra
+  - cinema
+  - concerto
+  - spettacolo
+  - mercatino
+  - torneo
+  - camminata
+  - trail
+  - escursione
+  - outdoor
+
+exclude_keywords:
+  - news
+  - notizia
+  - editoriale
+  - comunicato stampa
+  - rassegna stampa
+  - apertura uffici
+  - orari ufficio
+  - servizio
+  - attività permanente
+  - stagione sportiva
+  - campionato
+  - classifica
+
+event_link_keywords:
+  - eventi
+  - event
+  - manifestazioni
+  - calendario
+  - proloco
+  - comune
+  - museo
+  - teatro
+  - turismo
+  - facebook
+  - instagram
+
+browser_timeout_seconds: 18
+max_candidate_blocks_per_source: 40
