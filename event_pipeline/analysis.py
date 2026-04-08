@@ -49,6 +49,30 @@ CATEGORY_KEYWORDS = {
     "Cultura": ("cultura", "incontro", "presentazione", "conferenza", "libro", "museo"),
 }
 
+NON_EVENT_TITLE_PATTERNS = (
+    "amministrazione trasparente",
+    "accessibility statement",
+    "dichiarazione di accessibilita",
+    "dichiarazione di accessibilità",
+    "privacy policy",
+    "cookie policy",
+    "albo pretorio",
+    "modulistica",
+    "uffici comunali",
+)
+
+NON_EVENT_URL_PATTERNS = (
+    "amministrazione-trasparente",
+    "accessibility",
+    "privacy",
+    "cookie",
+    "albo-pretorio",
+    "modulistica",
+    "uffici",
+    "servizi",
+    "/page/",
+)
+
 
 class Analyzer:
     def __init__(self, project: ProjectConfig, provider):
@@ -61,6 +85,8 @@ class Analyzer:
         if self._contains_excluded_text(merged_text):
             return None
         if self._is_generic_listing_title(candidate.title):
+            return None
+        if self._is_non_event_page(candidate):
             return None
 
         ai_data = {}
@@ -145,6 +171,27 @@ class Analyzer:
             "eventi",
         )
         return any(lowered == pattern or lowered.startswith(pattern) for pattern in generic_patterns)
+
+    def _is_non_event_page(self, candidate: CandidateEvent) -> bool:
+        title = strip_accents(self._clean_text(candidate.title).lower())
+        source_url = strip_accents((candidate.source_url or "").lower())
+        text = strip_accents(" ".join([candidate.text or "", candidate.detail_text or ""]).lower())
+
+        if any(title == pattern or title.startswith(pattern) for pattern in NON_EVENT_TITLE_PATTERNS):
+            return True
+
+        if any(pattern in source_url for pattern in NON_EVENT_URL_PATTERNS):
+            title_has_event_hint = any(
+                token in title
+                for token in ("mostra", "concerto", "festival", "cinema", "sagra", "spettacolo", "evento", "laboratorio")
+            )
+            if not title_has_event_hint:
+                return True
+
+        if "trasparenza" in text or "obblighi di pubblicazione" in text or "accessibility statement" in text:
+            return True
+
+        return False
 
     def _guess_municipality(self, candidate: CandidateEvent, text: str, ai_data: dict) -> str:
         if ai_data.get("municipality"):
