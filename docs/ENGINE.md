@@ -1,6 +1,6 @@
 # Motore Aree e Generazione Config
 
-EventGEn ora include un primo motore operativo per:
+EventGen ora include un primo motore operativo per:
 
 - risolvere un'area da query testuale;
 - generare un `project.yaml` area-specifico;

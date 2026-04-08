@@ -30,7 +30,7 @@ DEFAULT_GENERATED_ROOT = REPO_ROOT / "generated"
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        description="EventGEn: motore locale per generare fonti compatibili e analizzare eventi pubblici."
+        description="EventGen: motore locale per generare fonti compatibili e analizzare eventi pubblici."
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 

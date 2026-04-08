@@ -2,7 +2,7 @@
 
 Base di partenza per costruire un'app desktop completa che generi aree, generi file fonti compatibili e analizzi eventi pubblici da fonti web e social.
 
-[Repository GitHub](https://github.com/BrianCortinovis/EventGEn) | [Quickstart](docs/QUICKSTART.md) | [Configurazione](docs/CONFIGURATION.md) | [Formato sources.yaml](docs/SOURCES_FORMAT.md) | [Motore aree](docs/ENGINE.md)
+[Repository GitHub](https://github.com/BrianCortinovis/EventGen) | [Quickstart](docs/QUICKSTART.md) | [Configurazione](docs/CONFIGURATION.md) | [Formato sources.yaml](docs/SOURCES_FORMAT.md) | [Motore aree](docs/ENGINE.md)
 
 ## Obiettivo
 

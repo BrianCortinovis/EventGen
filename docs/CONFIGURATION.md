@@ -15,7 +15,7 @@ Definisce il dominio del progetto:
 
 ## `catalog/areas/*.yaml`
 
-Definisce una zona riutilizzabile per il motore EventGEn.
+Definisce una zona riutilizzabile per il motore EventGen.
 
 Campi principali:
 

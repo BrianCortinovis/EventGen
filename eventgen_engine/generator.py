@@ -67,7 +67,7 @@ def build_area_payload(area: AreaDefinition) -> dict:
 
 def build_project_payload(template_project: dict, area: AreaDefinition) -> dict:
     payload = dict(template_project)
-    payload["name"] = f"EventGEn - {area.name}"
+    payload["name"] = f"EventGen - {area.name}"
     payload["description"] = (
         f"Configurazione generata per {area.name}. "
         "Motore locale per generare fonti compatibili e analizzare eventi pubblici."
@@ -87,7 +87,7 @@ def build_sources_payload(area: AreaDefinition) -> dict:
         "country": area.country,
         "notes": (
             f"Fonti iniziali generate per {area.name}. "
-            "Questa base puo essere estesa dalla futura UX desktop di EventGEn."
+            "Questa base puo essere estesa dalla futura UX desktop di EventGen."
         ),
         "defaults": {
             "enabled": True,

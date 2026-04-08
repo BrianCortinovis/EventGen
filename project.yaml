@@ -1,4 +1,4 @@
-name: EventGEn
+name: EventGen
 description: >
   Motore di base per una futura app desktop che genera fonti compatibili e analizza
   eventi pubblici da fonti web e social.

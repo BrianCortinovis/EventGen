@@ -3,8 +3,8 @@
 ## 1. Clona il repository
 
 ```bash
-git clone https://github.com/BrianCortinovis/EventGEn.git
-cd EventGEn
+git clone https://github.com/BrianCortinovis/EventGen.git
+cd EventGen
 ```
 
 ## 2. Crea un ambiente Python

@@ -39,7 +39,7 @@ search_labels:
   - Val Seriana Bergamo
   - Eventi Val Seriana
 notes: >
-  Caso reale iniziale per testare il motore di EventGEn. Le fonti inserite qui sono
+  Caso reale iniziale per testare il motore di EventGen. Le fonti inserite qui sono
   seed di partenza: ufficiali o semi-ufficiali, pensate per generare un sources.yaml
   compatibile e avviare subito la pipeline.
 source_seeds:
