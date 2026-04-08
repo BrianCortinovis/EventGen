@@ -22,7 +22,7 @@ defaults:
 sources:
   - id: <slug_univoco>
     name: <nome leggibile>
-    type: <portal|institution|aggregator|proloco|comune|museum|local_portal|cultural_portal|attraction|social>
+    type: <portal|institution|aggregator|proloco|comune|museum|local_portal|cultural_portal|attraction|venue|nightlife|bowling|social>
     subtype: <sottotipo leggibile>
     active: true
     discovery_only: <true|false>

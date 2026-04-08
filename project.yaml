@@ -15,12 +15,20 @@ categories:
   - Mostre
   - Cinema
   - Musica e spettacoli
+  - Concerti e live
   - Famiglia
   - Sagre e feste
+  - Enogastronomia
+  - Bar e locali
+  - Nightlife e clubbing
   - Mercatini
+  - Fiere e mercati
   - Sport
   - Outdoor
   - Tradizioni
+  - Cerimonie e parate
+  - Eventi di comunità
+  - Intrattenimento indoor
 
 include_keywords:
   - evento
@@ -29,9 +37,32 @@ include_keywords:
   - manifestazioni
   - sagra
   - festa
+  - festival
   - mostra
   - cinema
   - concerto
+  - live
+  - dj set
+  - dj
+  - serata
+  - aperitivo
+  - enoteca
+  - discoteca
+  - club
+  - bowling
+  - karaoke
+  - party
+  - street food
+  - degustazione
+  - fiera
+  - expo
+  - parata
+  - corteo
+  - rievocazione
+  - celebrazione
+  - commemorazione
+  - inaugurazione
+  - manifestazione ufficiale
   - spettacolo
   - mercatino
   - torneo
@@ -39,6 +70,8 @@ include_keywords:
   - trail
   - escursione
   - outdoor
+  - live music
+  - tribute band
 
 exclude_keywords:
   - news
@@ -53,12 +86,28 @@ exclude_keywords:
   - stagione sportiva
   - campionato
   - classifica
+  - menu
+  - prenota un tavolo
+  - booking camere
+  - listino prezzi
 
 event_link_keywords:
   - eventi
   - event
   - manifestazioni
   - calendario
+  - nightlife
+  - concerti
+  - live
+  - music
+  - club
+  - locale
+  - enoteca
+  - bar
+  - bowling
+  - fiera
+  - festa
+  - sagra
   - proloco
   - comune
   - museo

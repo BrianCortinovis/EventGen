@@ -37,7 +37,7 @@ I prossimi blocchi di sviluppo previsti qui dentro sono:
 - usa i social solo per discovery, mai come conferma forte;
 - deduplica eventi simili e assegna un livello di affidabilità;
 - arricchisce la scheda evento con testo esteso, foto, flyer e link YouTube;
-- genera `events.html` e `output/events.html`.
+- genera `events.html`, `events.json` ed export portal-ready con SEO.
 
 ## Struttura
 
@@ -93,6 +93,37 @@ Comandi gia disponibili:
 - `python3 run.py analyze ...`
 
 Il caso `Val Seriana` e incluso come area reale di test nel catalogo locale.
+
+## Tipi di eventi coperti
+
+Il motore e pensato per coprire praticamente tutto il perimetro eventi pubblici:
+
+- sagre, feste, mercatini, fiere;
+- mostre, cinema, cultura, tradizioni;
+- concerti, live, spettacoli;
+- serate in bar, pub, enoteche e locali;
+- nightlife, dj set, clubbing, bowling, intrattenimento indoor;
+- parate, cerimonie, manifestazioni ufficiali;
+- eventi sportivi pubblici e outdoor.
+
+L'obiettivo e distinguere gli eventi reali con data da semplici pagine promozionali o istituzionali.
+
+## Export per portali
+
+Oltre all'HTML e al JSON standard, la pipeline produce anche:
+
+- `output/portal_events.json`
+- `output/portal_events.ndjson`
+- `output/seo_index.json`
+- `output/search_index.ndjson`
+- `output/site_import.json`
+
+Questi file sono preparati per futuri aggiornamenti di siti o portali web, con campi utili per:
+
+- SEO editoriale;
+- ricerca interna;
+- import verso CMS o portali eventi;
+- schede evento con testo, media, sorgenti e metadata.
 
 ## Configurazione
 

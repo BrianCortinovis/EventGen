@@ -14,6 +14,7 @@ from event_pipeline.config import (
 )
 from event_pipeline.dedupe import deduplicate_events
 from event_pipeline.enrich import enrich_candidate_from_detail
+from event_pipeline.export_portal import export_portal_payload
 from event_pipeline.fetch import Fetcher
 from event_pipeline.parsing import discover_candidate_sources, extract_candidate_events
 from event_pipeline.providers import create_provider
@@ -268,6 +269,7 @@ def handle_analyze(args):
         json.dumps([event.to_dict() for event in deduped_events], ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+    portal_exports = export_portal_payload(project, deduped_events, output_html.parent)
 
     merge_and_save_candidate_sources(candidates_path, discovered_sources)
 
@@ -276,6 +278,11 @@ def handle_analyze(args):
     print(f"[done] output HTML: {output_html}")
     print(f"[done] copia HTML: {root_events_html}")
     print(f"[done] output JSON: {output_json}")
+    print(f"[done] export portale JSON: {portal_exports['portal_json']}")
+    print(f"[done] export portale NDJSON: {portal_exports['portal_ndjson']}")
+    print(f"[done] indice SEO: {portal_exports['seo_index']}")
+    print(f"[done] indice ricerca: {portal_exports['search_index']}")
+    print(f"[done] payload import sito: {portal_exports['site_import']}")
     if fetch_failures:
         print(f"[warn] fetch falliti: {len(fetch_failures)}")
     return 0
