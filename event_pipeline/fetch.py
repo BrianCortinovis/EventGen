@@ -26,6 +26,29 @@ class Fetcher:
                 return browser_result
         return self._fetch_with_requests(source)
 
+    def fetch_url(self, url: str, source: Optional[SourceConfig] = None, requires_browser: bool = False) -> FetchedDocument:
+        source = source or SourceConfig(name=url, url=url, type="portal", area="", priority=0)
+        effective_source = SourceConfig(
+            name=source.name,
+            url=url,
+            type=source.type,
+            area=source.area,
+            priority=source.priority,
+            source_id=source.source_id,
+            subtype=source.subtype,
+            municipality=source.municipality,
+            trust_level=source.trust_level,
+            parsing_profile=source.parsing_profile,
+            note=source.note,
+            requires_browser=requires_browser or source.requires_browser,
+            discovery_only=source.discovery_only,
+        )
+        if effective_source.requires_browser:
+            browser_result = self._fetch_with_browser(effective_source)
+            if browser_result is not None:
+                return browser_result
+        return self._fetch_with_requests(effective_source)
+
     def _fetch_with_requests(self, source: SourceConfig) -> FetchedDocument:
         response = self.session.get(source.url, timeout=25)
         response.raise_for_status()

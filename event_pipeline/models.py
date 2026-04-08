@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass, field
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -58,10 +58,14 @@ class CandidateEvent:
     raw_time: str = ""
     raw_location: str = ""
     image_url: str = ""
+    detail_text: str = ""
+    image_gallery: List[str] = field(default_factory=list)
+    flyer_urls: List[str] = field(default_factory=list)
+    youtube_urls: List[str] = field(default_factory=list)
     organizer: str = ""
     tags: List[str] = field(default_factory=list)
     discovery_only: bool = False
-    metadata: Dict[str, str] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -69,6 +73,7 @@ class EventRecord:
     id: str
     title: str
     short_description: str
+    full_description: str
     start_date: str
     end_date: str
     time_text: str
@@ -80,6 +85,9 @@ class EventRecord:
     source: str
     source_url: str
     image_url: str
+    gallery_images: List[str]
+    flyer_urls: List[str]
+    youtube_urls: List[str]
     tags: List[str]
     reliability: str
     confirmation_status: str

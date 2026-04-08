@@ -13,6 +13,7 @@ from event_pipeline.config import (
     merge_and_save_candidate_sources,
 )
 from event_pipeline.dedupe import deduplicate_events
+from event_pipeline.enrich import enrich_candidate_from_detail
 from event_pipeline.fetch import Fetcher
 from event_pipeline.parsing import discover_candidate_sources, extract_candidate_events
 from event_pipeline.providers import create_provider
@@ -248,6 +249,7 @@ def handle_analyze(args):
 
         print(f"[info] candidati trovati: {len(candidates)}")
         for candidate in candidates:
+            candidate = enrich_candidate_from_detail(candidate, fetcher)
             event = analyzer.normalize_candidate(candidate)
             if event:
                 raw_events.append(event)

@@ -36,6 +36,7 @@ I prossimi blocchi di sviluppo previsti qui dentro sono:
 - può usare un browser headless per pagine dinamiche quando serve;
 - usa i social solo per discovery, mai come conferma forte;
 - deduplica eventi simili e assegna un livello di affidabilità;
+- arricchisce la scheda evento con testo esteso, foto, flyer e link YouTube;
 - genera `events.html` e `output/events.html`.
 
 ## Struttura

@@ -118,6 +118,7 @@ def _extract_jsonld_events(soup: BeautifulSoup, document: FetchedDocument) -> Li
                     raw_time="",
                     raw_location=raw_location,
                     image_url=_jsonld_image(node),
+                    image_gallery=[url for url in [_jsonld_image(node)] if url],
                     organizer=_extract_name(node.get("organizer")),
                     tags=[],
                     discovery_only=document.source.discovery_only,
@@ -162,6 +163,7 @@ def _extract_block_events(soup: BeautifulSoup, document: FetchedDocument, projec
 
         link = _extract_link(element, document.final_url)
         image_url = _extract_image(element, document.final_url)
+        image_gallery = _extract_images(element, document.final_url)
         time_tag = element.find("time")
         raw_date = ""
         if time_tag:
@@ -180,6 +182,7 @@ def _extract_block_events(soup: BeautifulSoup, document: FetchedDocument, projec
                 raw_time=_find_time_like_text(text),
                 raw_location=_find_location_like_text(text),
                 image_url=image_url,
+                image_gallery=image_gallery,
                 organizer="",
                 tags=[],
                 discovery_only=document.source.discovery_only,
@@ -256,6 +259,15 @@ def _extract_image(element, base_url):
     if not image:
         return ""
     return urljoin(base_url, image["src"])
+
+
+def _extract_images(element, base_url):
+    urls = []
+    for image in element.find_all("img", src=True):
+        urls.append(urljoin(base_url, image["src"]))
+        if len(urls) >= 4:
+            break
+    return urls
 
 
 def _find_date_like_text(text):

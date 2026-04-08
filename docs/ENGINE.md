@@ -5,6 +5,7 @@ EventGEn ora include un primo motore operativo per:
 - risolvere un'area da query testuale;
 - generare un `project.yaml` area-specifico;
 - generare un `sources.yaml` compatibile;
+- arricchire gli eventi con testo descrittivo, immagini, flyer e link YouTube;
 - lanciare la pipeline sulla configurazione generata.
 
 ## Catalogo aree

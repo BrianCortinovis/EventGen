@@ -43,11 +43,16 @@ def _merge_into(target: EventRecord, incoming: EventRecord):
         target.venue = incoming.venue
     if not target.short_description and incoming.short_description:
         target.short_description = incoming.short_description
+    if len(incoming.full_description or "") > len(target.full_description or ""):
+        target.full_description = incoming.full_description
     if not target.image_url and incoming.image_url:
         target.image_url = incoming.image_url
     if not target.organizer and incoming.organizer:
         target.organizer = incoming.organizer
 
+    target.gallery_images = sorted(set(target.gallery_images + incoming.gallery_images))
+    target.flyer_urls = sorted(set(target.flyer_urls + incoming.flyer_urls))
+    target.youtube_urls = sorted(set(target.youtube_urls + incoming.youtube_urls))
     target.tags = sorted(set(target.tags + incoming.tags))
 
 

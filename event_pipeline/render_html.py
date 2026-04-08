@@ -101,8 +101,17 @@ def render_events_html(project: ProjectConfig, events):
       border-radius: 16px;
       padding: 18px;
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: minmax(0, 1fr) 260px;
       gap: 16px;
+    }}
+    .event-cover {{
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-top: 12px;
+      background: #f0e5d5;
     }}
     .event-main h2 {{
       margin: 0 0 8px;
@@ -134,6 +143,28 @@ def render_events_html(project: ProjectConfig, events):
     .event-side a {{
       color: var(--accent);
       text-decoration: none;
+    }}
+    .asset-links {{
+      display: grid;
+      gap: 6px;
+      margin-top: 10px;
+    }}
+    .asset-links a {{
+      font-size: 0.9rem;
+    }}
+    details {{
+      margin-top: 14px;
+    }}
+    summary {{
+      cursor: pointer;
+      color: var(--accent);
+      font-size: 0.92rem;
+    }}
+    .full-description {{
+      margin-top: 10px;
+      white-space: pre-line;
+      color: var(--muted);
+      line-height: 1.55;
     }}
     .empty {{
       padding: 28px;
@@ -296,6 +327,21 @@ def render_events_html(project: ProjectConfig, events):
         const secondary = (event.secondary_sources || []).length
           ? `<div>Fonti secondarie: ${{escapeHtml(event.secondary_sources.join(", "))}}</div>`
           : "";
+        const cover = event.image_url
+          ? `<img class="event-cover" src="${{escapeAttr(event.image_url)}}" alt="${{escapeAttr(event.title)}}" loading="lazy">`
+          : "";
+        const assets = [
+          (event.flyer_urls || []).slice(0, 3).map((url, index) => `<a href="${{escapeAttr(url)}}" target="_blank" rel="noreferrer">Flyer ${{index + 1}}</a>`),
+          (event.youtube_urls || []).slice(0, 2).map((url, index) => `<a href="${{escapeAttr(url)}}" target="_blank" rel="noreferrer">YouTube ${{index + 1}}</a>`)
+        ].flat().join("");
+        const detailSection = event.full_description && event.full_description !== event.short_description
+          ? `<details><summary>Apri scheda estesa</summary><div class="full-description">${{escapeHtml(event.full_description)}}</div></details>`
+          : "";
+        const mediaSummary = [
+          (event.gallery_images || []).length ? `${{event.gallery_images.length}} foto` : "",
+          (event.flyer_urls || []).length ? `${{event.flyer_urls.length}} flyer` : "",
+          (event.youtube_urls || []).length ? `${{event.youtube_urls.length}} link video` : ""
+        ].filter(Boolean).join(" · ");
         return `
           <article class="event-card">
             <div class="event-main">
@@ -306,6 +352,8 @@ def render_events_html(project: ProjectConfig, events):
                 ${{tags}}
               </div>
               <p>${{escapeHtml(event.short_description || "")}}</p>
+              ${{cover}}
+              ${{detailSection}}
             </div>
             <aside class="event-side">
               <div><strong>Data:</strong> ${{escapeHtml(formatDate(event.start_date, event.end_date))}}</div>
@@ -313,7 +361,9 @@ def render_events_html(project: ProjectConfig, events):
               <div><strong>Luogo:</strong> ${{escapeHtml(event.venue || "-")}}</div>
               <div><strong>Fonte:</strong> ${{escapeHtml(event.source || "-")}}</div>
               <div><strong>Ora:</strong> ${{escapeHtml(event.time_text || "-")}}</div>
+              <div><strong>Asset:</strong> ${{escapeHtml(mediaSummary || "-")}}</div>
               ${{secondary}}
+              <div class="asset-links">${{assets}}</div>
               <div style="margin-top:8px;"><a href="${{escapeAttr(event.source_url)}}" target="_blank" rel="noreferrer">Apri fonte originale</a></div>
             </aside>
           </article>

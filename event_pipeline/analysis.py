@@ -78,7 +78,8 @@ class Analyzer:
         venue = self._guess_venue(candidate, ai_data)
         category, subcategory = self._classify_category(candidate, merged_text, ai_data)
         organizer = self._guess_organizer(candidate, ai_data)
-        description = self._build_description(candidate, ai_data)
+        full_description = self._build_full_description(candidate, ai_data)
+        description = self._build_short_description(full_description, ai_data)
         reliability, confirmation_status = self._compute_reliability(candidate)
         event_id = self._build_id(candidate.title, start_date, municipality)
 
@@ -86,6 +87,7 @@ class Analyzer:
             id=event_id,
             title=self._clean_text(ai_data.get("title") or candidate.title),
             short_description=description,
+            full_description=full_description,
             start_date=start_date,
             end_date=end_date,
             time_text=self._clean_text(ai_data.get("time") or candidate.raw_time),
@@ -97,6 +99,9 @@ class Analyzer:
             source=candidate.source.name,
             source_url=candidate.source_url,
             image_url=ai_data.get("image_url") or candidate.image_url,
+            gallery_images=self._merge_urls(candidate.image_gallery, [candidate.image_url]),
+            flyer_urls=self._merge_urls(candidate.flyer_urls),
+            youtube_urls=self._merge_urls(candidate.youtube_urls),
             tags=sorted(set(candidate.tags + self._extract_tags(candidate, category))),
             reliability=reliability,
             confirmation_status=confirmation_status,
@@ -177,8 +182,12 @@ class Analyzer:
             return self._clean_text(candidate.organizer)
         return candidate.source.name
 
-    def _build_description(self, candidate: CandidateEvent, ai_data: dict) -> str:
-        text = self._clean_text(ai_data.get("short_description") or candidate.text)
+    def _build_full_description(self, candidate: CandidateEvent, ai_data: dict) -> str:
+        text = self._clean_text(ai_data.get("full_description") or candidate.detail_text or candidate.text)
+        return text
+
+    def _build_short_description(self, full_description: str, ai_data: dict) -> str:
+        text = self._clean_text(ai_data.get("short_description") or full_description)
         if len(text) <= 220:
             return text
         shortened = text[:217].rsplit(" ", 1)[0].strip()
@@ -217,6 +226,19 @@ class Analyzer:
 
     def _clean_text(self, value: str) -> str:
         return " ".join((value or "").split()).strip()
+
+    def _merge_urls(self, primary_items, extra_items=None):
+        items = list(primary_items or [])
+        items.extend(extra_items or [])
+        merged = []
+        seen = set()
+        for item in items:
+            clean = (item or "").strip()
+            if not clean or clean in seen:
+                continue
+            seen.add(clean)
+            merged.append(clean)
+        return merged
 
 
 def parse_date_range(text: str) -> Tuple[str, str]:
